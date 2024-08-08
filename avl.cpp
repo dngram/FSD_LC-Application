@@ -2,6 +2,8 @@
 #include<algorithm>
 using namespace std;
 //test lololololn,mn,mn,mn,n,mn
+//ddfhgiahgfuguiefhg
+//hhhhhhhhhhhhhhhhh
 class node
 {
     int data;
