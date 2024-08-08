@@ -1,7 +1,7 @@
 #include<iostream>
 #include<algorithm>
 using namespace std;
-//test lolololol
+//test lololololn,mn,mn,mn,n,mn
 class node
 {
     int data;
