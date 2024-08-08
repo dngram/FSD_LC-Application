@@ -2,7 +2,6 @@
 #include<algorithm>
 using namespace std;
 //test lololololn,mn,mn,mn,n,mn,darshan's edit, homeless ppl in da houseee
-//test lololololn,mn,mn,mn,n,mn
 //ddfhgiahgfuguiefhg
 //hhhhhhhhhhhhhhhhh
 class node
