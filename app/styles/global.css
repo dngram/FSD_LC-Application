@@ -1,0 +1,12 @@
+/* styles/global.css */
+.form-input{
+    width: 100%;
+    box-sizing: border-box;
+}
+h1{
+    font-weight: normal;
+}
+*{
+    font-family: "Arial";
+}
+  
