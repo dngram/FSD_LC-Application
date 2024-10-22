@@ -1,34 +1,46 @@
-// app/api/login/route.js
-
-import connectMongo from '@/lib/mongodb';  // Ensure the path is correct
-import User from '@/models/User';         // Ensure the path is correct
-import { NextResponse } from 'next/server';
-import bcrypt from 'bcrypt';              // Assuming you're using bcrypt for password hashing
+import bcrypt from 'bcryptjs';
+import User from '@/models/User';
+import connectMongo from '@/lib/mongodb';
 
 export async function POST(req) {
   try {
-    // Parse the request body
-    const { email, password } = await req.json();
-
-    // Connect to MongoDB
     await connectMongo();
+    const { email, password, type } = await req.json();
 
-    // Check if the user exists
-    const existingUser = await User.findOne({ email });
-    if (!existingUser) {
-      return NextResponse.json({ message: 'User not found' }, { status: 404 });
+    // Find the user by email
+    const user = await User.findOne({ email });
+    if (!user) {
+      return new Response(
+        JSON.stringify({ error: 'User not found' }),
+        { status: 404 }
+      );
     }
 
-    // Compare the provided password with the stored hashed password
-    const passwordMatch = await bcrypt.compare(password, existingUser.password);
-    if (!passwordMatch) {
-      return NextResponse.json({ message: 'Incorrect password' }, { status: 401 });
+    // Check if the account type matches
+    if (user.type !== type) {
+      return new Response(
+        JSON.stringify({ error: `You are not authorized as a ${type}` }),
+        { status: 403 }
+      );
     }
 
-    // Respond with success (e.g., send token or session setup can go here)
-    return NextResponse.json({ message: 'Login successful', user: existingUser }, { status: 200 });
+    // Compare the passwords
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return new Response(
+        JSON.stringify({ error: 'Invalid credentials' }),
+        { status: 400 }
+      );
+    }
+
+    // If everything is correct
+    console.log("User logged in:", user);
+    return new Response(JSON.stringify({ message: 'Login successful' }), { status: 200 });
   } catch (error) {
-    console.error('Error in login:', error);
-    return NextResponse.json({ message: 'Internal Server Error' }, { status: 500 });
+    console.error("Error in login:", error);
+    return new Response(
+      JSON.stringify({ error: 'Login failed' }),
+      { status: 500 }
+    );
   }
 }
