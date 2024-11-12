@@ -369,7 +369,7 @@ export default function Home() {
           />
 
 
-          <label htmlFor="mothersName">Mother's Name:</label>
+          <label htmlFor="mothersName">Mother&apos;s Name:</label>
           <input
             id="mothersName"
             type="text"

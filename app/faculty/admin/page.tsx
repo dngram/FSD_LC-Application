@@ -19,7 +19,16 @@ interface Application {
 export default function FacultyDashboard() {
   const [applications, setApplications] = useState<Application[]>([]);
   const [selectedRole, setSelectedRole] = useState<string>('');
-  const facultyRole = sessionStorage.getItem('userRole') || 'HoS'; // Get the role from session storage
+  
+  const [facultyRole, setFacultyRole] = useState<string>(''); // State to store the faculty role
+
+  // Set facultyRole from sessionStorage when the component mounts
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const role = sessionStorage.getItem('userRole') || 'HoS';
+      setFacultyRole(role); // Set facultyRole state
+    }
+  }, []);
 
   // Fetch applications from the backend
   useEffect(() => {

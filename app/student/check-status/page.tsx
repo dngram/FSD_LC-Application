@@ -21,7 +21,16 @@ interface Status {
 export default function CheckStatus() {
   const [status, setStatus] = useState<Status | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const officialEmail = sessionStorage.getItem('officialEmail'); // Get the official email from session storage
+  
+  const [officialEmail, setOfficialEmail] = useState<string | null>(null); // State for official email
+
+  // Set officialEmail from sessionStorage when the component mounts
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const email = sessionStorage.getItem("officialEmail");
+      setOfficialEmail(email); // Store the email in state
+    }
+  }, []);
 
   // Fetch application status for the student based on officialEmail
   useEffect(() => {
