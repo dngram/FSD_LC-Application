@@ -1,27 +1,44 @@
-// app/student/signup/page.tsx
+// app/faculty/signup/page.tsx
 'use client';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import React from 'react';
-import StudentSignupUI from './StudentSignupUI';
+import FacultySignupUI from './FacultySignupUI';
 import PageTransition from '../../PageTransition';
 
-export default function StudentSignup() {
+export default function FacultySignup() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [type] = useState('student'); // Always set type to "student" for this form
   const router = useRouter();
+
+  // Define the static email-role mapping
+  const emailRoleMapping: { [key: string]: string } = {
+    'hos@mitwpu.edu.in': 'HoS',
+    'librarian@mitwpu.edu.in': 'Librarian',
+    'accounts@mitwpu.edu.in': 'Accounts',
+    'gymkhana@mitwpu.edu.in': 'Gymkhana',
+    'programoffice@mitwpu.edu.in': 'ProgramOffice',
+    'dean@mitwpu.edu.in': 'Dean'
+  };
 
   const handleSignup = async (event: React.FormEvent) => {
     event.preventDefault();
 
-    // Email and Password validation
+    // Email validation
     const emailPattern = /^[a-zA-Z0-9._%+-]+@mitwpu\.edu\.in$/;
     if (!emailPattern.test(email)) {
       alert('Email must end with @mitwpu.edu.in');
       return;
     }
 
+    // Check if email is in the predefined list
+    const role = emailRoleMapping[email.toLowerCase()];
+    if (!role) {
+      alert('This email is not authorized for any faculty role.');
+      return;
+    }
+
+    // Password validation
     const passwordPattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
     if (!passwordPattern.test(password)) {
       alert('Password must be at least 8 characters long, and include at least one uppercase letter, one lowercase letter, one number, and one special character.');
@@ -33,12 +50,12 @@ export default function StudentSignup() {
       const res = await fetch('/api/signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password, type }), // Pass the type field
+        body: JSON.stringify({ email, password, role }), // Use role determined from the mapping
       });
 
       if (res.ok) {
         alert('Signup successful!');
-        router.push('/student/login');
+        router.push('/faculty/login');
       } else {
         const data = await res.json();
         alert(data.error || 'Signup failed');
@@ -51,7 +68,7 @@ export default function StudentSignup() {
 
   // return (
   //   <form onSubmit={handleSignup}>
-  //     <h1>Student Signup</h1>
+  //     <h1>Faculty Signup</h1>
 
   //     <input
   //       type="email"
@@ -69,15 +86,12 @@ export default function StudentSignup() {
   //       required
   //     />
 
-  //     {/* Hidden input for type (for now it’s always "student") */}
-  //     <input type="hidden" value={type} />
-
   //     <button type="submit">Signup</button>
   //   </form>
   // );
   return (
     <PageTransition>
-      <StudentSignupUI
+      <FacultySignupUI
         email={email}
         setEmail={setEmail}
         password={password}

@@ -1,9 +1,10 @@
+// app/student/dashboard/form/page.tsx
 "use client";
 import React, { useState } from "react";
 import jsPDF from "jspdf";
 import Image from "next/image";
-import "./styles/styles1.css";
-
+import "./form.css"; 
+import PageTransition from '../../../PageTransition';
 export default function Home() {
   // State variables for form fields
   const [name, setName] = useState("");
@@ -32,11 +33,11 @@ export default function Home() {
   const [alternateMobileNumber, setAlternateMobileNumber] = useState("");
 
   // State for uploaded files
-  const [pdfFile1, setPdfFile1] = useState<File | null>(null);
-  const [pdfFile2, setPdfFile2] = useState<File | null>(null);
-  const [pdfFile3, setPdfFile3] = useState<File | null>(null);
-  const [pdfFile4, setPdfFile4] = useState<File | null>(null);
-  const [jpgFile, setJpgFile] = useState<File | null>(null);
+  const [Prov_Cert, setProv_Cert] = useState<File | null>(null);
+  const [Marksheet, setMarksheet] = useState<File | null>(null);
+  const [Fee_Receipt, setFee_Receipt] = useState<File | null>(null);
+  const [Prev_LC, setPrev_LC] = useState<File | null>(null);
+  const [ID_Card, setID_Card] = useState<File | null>(null);
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -80,7 +81,7 @@ export default function Home() {
     });
 
     // Save the PDF
-    doc.save("lcformgenerated.pdf");
+    doc.save("Leaving_Certificate_Application.pdf");
 
     // Prepare form data for submission (including file uploads)
     const formData = new FormData();
@@ -109,11 +110,15 @@ export default function Home() {
     formData.append("mothersName", mothersName);
     formData.append("alternateMobileNumber", alternateMobileNumber);
 
-    if (pdfFile1) formData.append("pdfFile1", pdfFile1);
-    if (pdfFile2) formData.append("pdfFile2", pdfFile2);
-    if (pdfFile3) formData.append("pdfFile3", pdfFile3);
-    if (pdfFile4) formData.append("pdfFile4", pdfFile4);
-    if (jpgFile) formData.append("jpgFile", jpgFile);
+    // Add the official email to the form data
+    const officialEmail = sessionStorage.getItem('officialEmail') || ""; // Default to an empty string if null
+    formData.append("officialEmail", officialEmail); // Append the email
+
+    if (Prov_Cert) formData.append("Prov_Cert", Prov_Cert);
+    if (Marksheet) formData.append("Marksheet", Marksheet);
+    if (Fee_Receipt) formData.append("Fee_Receipt", Fee_Receipt);
+    if (Prev_LC) formData.append("Prev_LC", Prev_LC);
+    if (ID_Card) formData.append("ID_Card", ID_Card);
 
     // Send form data to the backend server
     try {
@@ -134,6 +139,7 @@ export default function Home() {
   };
 
   return (
+  <PageTransition>
     <div className="form-container">
       <div className="logo-container">
         {/* Include the logo here */}
@@ -149,6 +155,8 @@ export default function Home() {
             value={name}
             onChange={(e) => setName(e.target.value)}
             required
+            pattern="^[a-zA-Z\s]+$"
+            title="Name should only contain letters and spaces."
           />
 
           <label htmlFor="mrOrMrs">Mr./Mrs.:</label>
@@ -194,6 +202,8 @@ export default function Home() {
             value={prnNo}
             onChange={(e) => setPrnNo(e.target.value)}
             required
+            pattern="\d{10}"
+            title="PRN number should be a 10-digit number."
           />
 
           <label htmlFor="result">Result:</label>
@@ -245,16 +255,18 @@ export default function Home() {
             required
           />
 
-          <label htmlFor="previousCollegePassingYear">
-            Previous College Passing Year:
-          </label>
+          <label htmlFor="previousCollegePassingYear">Previous College Passing Year:</label>
           <input
             id="previousCollegePassingYear"
             type="number"
             value={previousCollegePassingYear}
             onChange={(e) => setPreviousCollegePassingYear(e.target.value)}
             required
+            min="1900"
+            max={new Date().getFullYear()}
+            title={`Year should be between 1900 and ${new Date().getFullYear()}.`}
           />
+
 
           <label htmlFor="dateOfAdmission">
             Date of admission at MIT-WPU:
@@ -331,7 +343,10 @@ export default function Home() {
             value={permanentAddress}
             onChange={(e) => setPermanentAddress(e.target.value)}
             required
+            maxLength={200}
+            title="Address should not exceed 200 characters."
           />
+
 
           <label htmlFor="email">Email id:</label>
           <input
@@ -349,7 +364,10 @@ export default function Home() {
             value={mobileNumber}
             onChange={(e) => setMobileNumber(e.target.value)}
             required
+            pattern="\d{10}"
+            title="Mobile number should be a 10-digit number."
           />
+
 
           <label htmlFor="mothersName">Mother's Name:</label>
           <input
@@ -360,58 +378,61 @@ export default function Home() {
             required
           />
 
-          <label htmlFor="alternateMobileNumber">
-            Alternate Mobile number:
-          </label>
+          <label htmlFor="alternateMobileNumber">Alternate Mobile number:</label>
           <input
             id="alternateMobileNumber"
             type="tel"
             value={alternateMobileNumber}
             onChange={(e) => setAlternateMobileNumber(e.target.value)}
+            pattern="\d{10}"
+            title="Alternate mobile number should be a 10-digit number."
+            placeholder="Optional"
           />
 
-<label htmlFor="pdfFile1">Upload Payment Receipt</label>
+
+<label htmlFor="Prov_Cert">Provisional Certificate</label>
           <input
-            id="pdfFile1"
+            id="Prov_Cert"
             type="file"
             accept=".pdf"
-            onChange={(e) => setPdfFile1(e.target.files?.[0] || null)}
+            onChange={(e) => setProv_Cert(e.target.files?.[0] || null)}
           />
 
-          <label htmlFor="pdfFile2">Upload Previous LC</label>
+          <label htmlFor="Marksheet">Marksheet</label>
           <input
-            id="pdfFile2"
+            id="Marksheet"
             type="file"
             accept=".pdf"
-            onChange={(e) => setPdfFile2(e.target.files?.[0] || null)}
+            onChange={(e) => setMarksheet(e.target.files?.[0] || null)}
           />
 
-          <label htmlFor="pdfFile3">Upload Provisional Degree Certificate:</label>
+          <label htmlFor="Fee_Receipt">Fee Receipt</label>
           <input
-            id="pdfFile3"
+            id="Fee_Receipt"
             type="file"
             accept=".pdf"
-            onChange={(e) => setPdfFile3(e.target.files?.[0] || null)}
+            onChange={(e) => setFee_Receipt(e.target.files?.[0] || null)}
           />
 
-          <label htmlFor="pdfFile4">Upload Student Marksheet:</label>
+          <label htmlFor="Prev_LC">Previous Leaving Certificate</label>
           <input
-            id="pdfFile4"
+            id="Prev_LC"
             type="file"
             accept=".pdf"
-            onChange={(e) => setPdfFile4(e.target.files?.[0] || null)}
+            onChange={(e) => setPrev_LC(e.target.files?.[0] || null)}
           />
 
-          <label htmlFor="jpgFile">Upload ID Card:</label>
+          <label htmlFor="ID_Card">ID Card</label>
           <input
-            id="jpgFile"
+            id="ID_Card"
             type="file"
             accept=".jpg,.jpeg"
-            onChange={(e) => setJpgFile(e.target.files?.[0] || null)}
+            onChange={(e) => setID_Card(e.target.files?.[0] || null)}
           />
         </div>
         <button type="submit">Submit</button>
       </form>
     </div>
+  </PageTransition>
   );
 }

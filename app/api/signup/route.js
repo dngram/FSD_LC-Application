@@ -5,14 +5,24 @@ import connectMongo from '@/lib/mongodb';
 export async function POST(req) {
   try {
     await connectMongo();
-    const { email, password, type } = await req.json();
+    const { email, password } = await req.json();
 
-    // Validate the type field (it should be either "student" or "faculty")
-    if (!['student', 'faculty'].includes(type)) {
-      return new Response(
-        JSON.stringify({ error: 'Invalid user type' }),
-        { status: 400 }
-      );
+    // Map specific emails to their roles for faculty
+    const emailRoleMapping = {
+      'hos@mitwpu.edu.in': 'HoS',
+      'librarian@mitwpu.edu.in': 'Librarian',
+      'accounts@mitwpu.edu.in': 'Accounts',
+      'gymkhana@mitwpu.edu.in': 'Gymkhana',
+      'programoffice@mitwpu.edu.in': 'ProgramOffice',
+      'dean@mitwpu.edu.in': 'Dean'
+    };
+
+    // Determine role based on email (if faculty email, assign respective role)
+    let role = emailRoleMapping[email.toLowerCase()];
+    
+    // If no role is found, assume the user is a student
+    if (!role) {
+      role = 'student';
     }
 
     // Check if the user already exists
@@ -28,11 +38,11 @@ export async function POST(req) {
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    // Create a new user with the dynamic type (student or faculty)
+    // Create a new user with the assigned role
     const newUser = new User({
       email,
       password: hashedPassword,
-      type, // Use the passed type field from the frontend
+      type: role // Use the role (either faculty role or student)
     });
 
     const savedUser = await newUser.save();

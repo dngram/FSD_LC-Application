@@ -5,7 +5,25 @@ import connectMongo from '@/lib/mongodb';
 export async function POST(req) {
   try {
     await connectMongo();
-    const { email, password, type } = await req.json();
+    const { email, password } = await req.json();
+
+    // Map specific emails to their roles (faculty-only mapping)
+    const emailRoleMapping = {
+      'hos@mitwpu.edu.in': 'HoS',
+      'librarian@mitwpu.edu.in': 'Librarian',
+      'accounts@mitwpu.edu.in': 'Accounts',
+      'gymkhana@mitwpu.edu.in': 'Gymkhana',
+      'programoffice@mitwpu.edu.in': 'ProgramOffice',
+      'dean@mitwpu.edu.in': 'Dean'
+    };
+
+    // Determine the expected role based on email (for faculty members)
+    let expectedRole = emailRoleMapping[email.toLowerCase()];
+    
+    // If no faculty role, assume the user is a student
+    if (!expectedRole) {
+      expectedRole = 'student';
+    }
 
     // Find the user by email
     const user = await User.findOne({ email });
@@ -16,10 +34,10 @@ export async function POST(req) {
       );
     }
 
-    // Check if the account type matches
-    if (user.type !== type) {
+    // Check if the user's role matches the expected role
+    if (user.type !== expectedRole) {
       return new Response(
-        JSON.stringify({ error: `You are not authorized as a ${type}` }),
+        JSON.stringify({ error: `You are not authorized as a ${expectedRole}` }),
         { status: 403 }
       );
     }
@@ -33,7 +51,7 @@ export async function POST(req) {
       );
     }
 
-    // If everything is correct
+    // If everything is correct, log the user in
     console.log("User logged in:", user);
     return new Response(JSON.stringify({ message: 'Login successful' }), { status: 200 });
   } catch (error) {
