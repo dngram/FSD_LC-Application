@@ -1,10 +1,31 @@
 import { useRouter } from 'next/router';
 import { MongoClient } from 'mongodb';
 import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 const ApplicationDetails = ({ applicationData }) => {
+  const [error, setError] = useState(null);
+  const [isLoading, setIsLoading] = useState(true); // Loading state
+  const router = useRouter();
+  const { id } = router.query;
+
+  useEffect(() => {
+    // Check if applicationData exists and is valid
+    if (applicationData) {
+      setIsLoading(false);
+      generateAndOpenPDF();
+    } else {
+      setIsLoading(false);
+      setError('Application data not found.');
+    }
+  }, [applicationData]);
+
   const generateAndOpenPDF = async () => {
+    if (!applicationData) {
+      setError('Application data is missing.');
+      return;
+    }
+
     const pdfDoc = await PDFDocument.create();
     const page = pdfDoc.addPage([650, 1000]); // Widened page for better layout
     const { width, height } = page.getSize();
@@ -100,7 +121,6 @@ const ApplicationDetails = ({ applicationData }) => {
     };
 
     // Draw all sections with proper headers and fields
-
     // Section: Basic Information
     drawSectionHeader('Basic Information');
     drawField('Name of Student', applicationData.name);
@@ -134,6 +154,60 @@ const ApplicationDetails = ({ applicationData }) => {
     drawField("Mother's Name", applicationData.mothersName);
     drawField('Alternate Mobile Number', applicationData.alternateMobileNumber);
 
+    // Load additional PDFs and Image from uploads folder
+    const pdfFiles = [
+      applicationData.Prov_Cert,
+      applicationData.Marksheet,
+      applicationData.Fee_Receipt,
+      applicationData.Prev_LC,
+    ];
+
+    // Load and append the PDFs
+    for (const filePath of pdfFiles) {
+      const pdfBytes = await fetch(filePath).then(res => res.arrayBuffer());
+      const externalPdf = await PDFDocument.load(pdfBytes);
+      const copiedPages = await pdfDoc.copyPages(externalPdf, externalPdf.getPageIndices());
+      copiedPages.forEach(page => pdfDoc.addPage(page));
+    }
+
+    
+    // Load the image (ID Card) and append it
+    const imagePath = applicationData.ID_Card;
+    const imageBytes = await fetch(imagePath).then(res => res.arrayBuffer());
+    // Determine the image type (JPG or PNG)
+    const imageExtension = imagePath.split('.').pop().toLowerCase(); // Extract file extension
+
+    let image;
+    if (imageExtension === 'jpg' || imageExtension === 'jpeg') {
+      // If the image is a JPG
+      image = await pdfDoc.embedJpg(imageBytes);
+    } else if (imageExtension === 'png') {
+      // If the image is a PNG
+      image = await pdfDoc.embedPng(imageBytes);
+    } else {
+      throw new Error('Unsupported image format');
+    }
+
+    const imageWidth = image.width;
+    const imageHeight = image.height;
+
+    // Fixed height for the image, scale the width proportionally
+    const fixedHeight = 150; // Adjust this value as per your need
+    const scale = fixedHeight / imageHeight; // Calculate the scaling factor based on height
+
+    // Calculate the new width of the image
+    const scaledWidth = imageWidth * scale;
+
+    const imageX = (width - scaledWidth) / 2; // Center the image horizontally
+    const imageY = yPosition - fixedHeight - 30; // Position below the last section
+
+    page.drawImage(image, {
+      x: imageX,
+      y: imageY,
+      width: scaledWidth,
+      height: fixedHeight,
+    });
+
     // Save the PDF document and open it in the same tab
     const pdfBytes = await pdfDoc.save();
     const blob = new Blob([pdfBytes], { type: 'application/pdf' });
@@ -143,32 +217,47 @@ const ApplicationDetails = ({ applicationData }) => {
     window.location.href = blobUrl;
   };
 
-  useEffect(() => {
-    generateAndOpenPDF();
-  }, []);
+  // Display loading state or error message
+  if (isLoading) {
+    return <div>Loading Application Details...</div>;
+  }
 
-  return (
-    <div>
-      <h1>Opening your PDF...</h1>
-      <p>The PDF document is opening in the same tab.</p>
-    </div>
-  );
+  if (error) {
+    return <div>Error: {error}</div>;
+  }
+
+  return null;
 };
 
+// Fetch data server-side using MongoDB
 export async function getServerSideProps(context) {
   const { id } = context.params;
-  const client = await MongoClient.connect('mongodb://localhost:27017');
+  
+  // Use environment variable for MongoDB URI
+  const mongoURI = process.env.MONGODB_URI; 
+  const client = await MongoClient.connect(mongoURI);
   const db = client.db('test');
   const collection = db.collection('formdatas');
   
-  const applicationData = await collection.findOne({ prnNo: id });
-  client.close();
+  try {
+    const applicationData = await collection.findOne({ prnNo: id });
+    client.close();
 
-  return {
-    props: {
-      applicationData: JSON.parse(JSON.stringify(applicationData)),
-    },
-  };
+    if (!applicationData) {
+      return {
+        notFound: true,
+      };
+    }
+
+    return {
+      props: {
+        applicationData: JSON.parse(JSON.stringify(applicationData)),
+      },
+    };
+  } catch (error) {
+    client.close();
+    return { props: { error: 'Failed to fetch application data.' } };
+  }
 }
 
 export default ApplicationDetails;

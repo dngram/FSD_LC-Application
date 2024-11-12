@@ -122,7 +122,7 @@ export default function Home() {
 
     // Send form data to the backend server
     try {
-      const response = await fetch("http://localhost:5000/submit", {
+      const response = await fetch("/api/submit", {
         method: "POST",
         body: formData,
       });
