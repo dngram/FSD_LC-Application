@@ -1,7 +1,6 @@
 import mongoose from 'mongoose';
 import multer from 'multer';
-import path from 'path';  // Import path module
-import { mkdir, writeFile } from 'fs/promises';  // Import mkdir and writeFile from fs/promises
+import AWS from 'aws-sdk';
 import { NextResponse } from 'next/server';
 
 // Initialize MongoDB connection
@@ -48,11 +47,11 @@ const FormDataSchema = new mongoose.Schema({
   mobileNumber: String,
   mothersName: String,
   alternateMobileNumber: String,
-  Prov_Cert: String,  // File path for provisional certificate
-  Marksheet: String,   // File path for marksheet
-  Fee_Receipt: String, // File path for fee receipt
-  Prev_LC: String,     // File path for previous LC
-  ID_Card: String,     // File path for ID card
+  Prov_Cert: String,  // File URL for provisional certificate
+  Marksheet: String,   // File URL for marksheet
+  Fee_Receipt: String, // File URL for fee receipt
+  Prev_LC: String,     // File URL for previous LC
+  ID_Card: String,     // File URL for ID card
   verificationStatus: {
     HoS: { type: Boolean, default: false },
     Librarian: { type: Boolean, default: false },
@@ -68,20 +67,17 @@ const FormDataSchema = new mongoose.Schema({
 // Initialize model (prevent multiple model compilation)
 const FormData = mongoose.models.FormData || mongoose.model('FormData', FormDataSchema);
 
-// Configure multer
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    // Save to the root uploads folder
-    cb(null, path.join(process.cwd(), 'uploads')); // Correct location
-  },
-  filename: (req, file, cb) => {
-    const prnNo = req.body.prnNo;
-    const fileType = file.fieldname;
-    const uniqueName = `${prnNo}_${fileType}_${Date.now()}_${file.originalname}`;
-    cb(null, uniqueName);
-  }
+// Configure AWS SDK
+AWS.config.update({
+  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+  region: process.env.AWS_REGION,
 });
 
+const s3 = new AWS.S3();
+
+// Configure multer to store files in memory (for S3 upload)
+const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 
 // Helper function to handle file upload
@@ -116,33 +112,28 @@ export async function POST(req) {
       }
     }
 
-    // Create uploads directory if it doesn't exist
-    const uploadsDir = path.join(process.cwd(), 'uploads');
-    try {
-      await mkdir(uploadsDir, { recursive: true });
-    } catch (err) {
-      if (err.code !== 'EEXIST') throw err;
-    }
-
-    // Second pass: handle files with access to formFields (including PRN)
+    // Second pass: handle files and upload to AWS S3
     for (const [key, value] of formData.entries()) {
       if (value instanceof File) {
         try {
+          const fileBuffer = Buffer.from(await value.arrayBuffer());
           const filename = `${formFields.prnNo || 'unknown'}_${key}_${Date.now()}_${value.name}`;
-          const filepath = path.join(uploadsDir, filename);
 
-          const bytes = await value.arrayBuffer();
-          const buffer = Buffer.from(bytes);
+          // Upload to S3
+          const s3Params = {
+            Bucket: process.env.AWS_S3_BUCKET_NAME, // Your S3 bucket name
+            Key: `uploads/${filename}`, // File path inside S3
+            Body: fileBuffer, // File content as a buffer
+            ContentType: value.type, // MIME type of the file
+          };
+
+          const uploadResult = await s3.upload(s3Params).promise();
+          console.log(`File uploaded to S3: ${uploadResult.Location}`);
           
-          // Write file to the uploads directory
-          await writeFile(filepath, buffer);
-          
-          // Store the public URL path (used later to store in DB)
-          files[key] = `/uploads/${filename}`; // This URL path can be accessed by users
-            
-          console.log(`File saved: ${filepath}`);
+          // Store the S3 URL in the 'files' object
+          files[key] = uploadResult.Location; // S3 URL of the uploaded file
         } catch (error) {
-          console.error(`Error saving file ${key}:`, error);
+          console.error(`Error uploading file ${key} to S3:`, error);
           throw error;
         }
       }
@@ -180,3 +171,10 @@ export async function POST(req) {
     );
   }
 }
+
+export const config = {
+  api: {
+    bodyParser: false,
+    responseLimit: '8mb',
+  },
+};
