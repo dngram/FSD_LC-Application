@@ -1,5 +1,4 @@
 import mongoose from 'mongoose';
-import multer from 'multer';
 import AWS from 'aws-sdk';
 import { NextResponse } from 'next/server';
 
@@ -76,24 +75,20 @@ AWS.config.update({
 
 const s3 = new AWS.S3();
 
-// Configure multer to store files in memory (for S3 upload)
-const storage = multer.memoryStorage();
-const upload = multer({ storage: storage });
-
 // Helper function to handle file upload
-function runMiddleware(req, middleware) {
-  return new Promise((resolve, reject) => {
-    middleware(req, {
-      end: (error) => {
-        if (error) reject(error);
-        resolve();
-      },
-      setHeader: () => {},
-    }, (error) => {
-      if (error) reject(error);
-      resolve();
-    });
-  });
+async function handleFileUpload(file, formFields) {
+  const fileBuffer = Buffer.from(await file.arrayBuffer());
+  const filename = `${formFields.prnNo || 'unknown'}_${file.name}_${Date.now()}`;
+
+  const s3Params = {
+    Bucket: process.env.S3_BUCKET_NAME,
+    Key: `uploads/${filename}`, // File path inside S3
+    Body: fileBuffer,
+    ContentType: file.type,
+  };
+
+  const uploadResult = await s3.upload(s3Params).promise();
+  return uploadResult.Location; // URL of the uploaded file in S3
 }
 
 export async function POST(req) {
@@ -101,7 +96,7 @@ export async function POST(req) {
     // Connect to MongoDB
     await connectToMongoDB();
 
-    // Handle file uploads
+    // Parse form data (no body parsing middleware needed in Next.js 14+)
     const formData = await req.formData();
     const files = {};
     const formFields = {};
@@ -113,30 +108,11 @@ export async function POST(req) {
       }
     }
 
-    // Second pass: handle files and upload to AWS S3
+    // Second pass: handle file uploads and upload to AWS S3
     for (const [key, value] of formData.entries()) {
       if (value instanceof File) {
-        try {
-          const fileBuffer = Buffer.from(await value.arrayBuffer());
-          const filename = `${formFields.prnNo || 'unknown'}_${key}_${Date.now()}_${value.name}`;
-
-          // Upload to S3
-          const s3Params = {
-            Bucket: process.env.S3_BUCKET_NAME, // Your S3 bucket name
-            Key: `uploads/${filename}`, // File path inside S3
-            Body: fileBuffer, // File content as a buffer
-            ContentType: value.type, // MIME type of the file
-          };
-
-          const uploadResult = await s3.upload(s3Params).promise();
-          console.log(`File uploaded to S3: ${uploadResult.Location}`);
-          
-          // Store the S3 URL in the 'files' object
-          files[key] = uploadResult.Location; // S3 URL of the uploaded file
-        } catch (error) {
-          console.error(`Error uploading file ${key} to S3:`, error);
-          throw error;
-        }
+        const uploadedUrl = await handleFileUpload(value, formFields);
+        files[key] = uploadedUrl; // Store the URL from S3
       }
     }
 
