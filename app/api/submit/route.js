@@ -101,6 +101,7 @@ export async function POST(req) {
     // Connect to MongoDB
     await connectToMongoDB();
 
+    // Handle file uploads
     const formData = await req.formData();
     const files = {};
     const formFields = {};
@@ -171,10 +172,3 @@ export async function POST(req) {
     );
   }
 }
-
-export const config = {
-  api: {
-    bodyParser: false,
-    responseLimit: '8mb',
-  },
-};
