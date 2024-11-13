@@ -6,7 +6,7 @@ import AWS from 'aws-sdk';
 
 // Initialize S3 client
 const s3 = new AWS.S3({
-  region: process.env.AWS_REGION, // Make sure this is set correctly
+  region: process.env.REGION, // Make sure this is set correctly
 });
 
 const ApplicationDetails = ({ applicationData }) => {
@@ -27,7 +27,7 @@ const ApplicationDetails = ({ applicationData }) => {
 
   const fetchFileFromS3 = async (key) => {
     try {
-      const bucketName = process.env.AWS_S3_BUCKET_NAME;
+      const bucketName = process.env.S3_BUCKET_NAME;
       if (!bucketName) {
         throw new Error('S3 bucket name is not defined in environment variables.');
       }
