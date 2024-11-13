@@ -180,10 +180,3 @@ export async function POST(req) {
     );
   }
 }
-
-export const config = {
-  api: {
-    bodyParser: false,
-    responseLimit: '8mb',
-  },
-};
