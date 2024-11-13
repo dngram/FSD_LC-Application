@@ -1,6 +1,7 @@
 import mongoose from 'mongoose'; // Use ES6 import
 
 const FormDataSchema = new mongoose.Schema({
+  // Define schema fields here...
   name: String,
   mrOrMrs: String,
   facultySchool: String,
@@ -42,6 +43,6 @@ const FormDataSchema = new mongoose.Schema({
   officialEmail: String
 });
 
-const FormData = mongoose.models.FormData || mongoose.model('FormData', FormDataSchema); 
+const FormData = mongoose.models.FormData || mongoose.model('FormData', FormDataSchema);
 
-export { FormData }; // Export with ES6 syntax
+export default FormData;  // Use default export

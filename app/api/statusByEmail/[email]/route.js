@@ -1,6 +1,6 @@
 // pages/api/statusByEmail/[email].js
 
-import { FormData } from "../../../../models/FormData"; // Import FormData model
+import FormData from "../../../../models/FormData"; // Import FormData model
 import dbConnect from "../../dbConnect"; // Import database connection utility
 
 // This handler will fetch the student's status by their official email

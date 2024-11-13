@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { FormData } from '../../../../../models/FormData'; // Adjust path to your FormData model
+import FormData from '../../../../../models/FormData'; // Adjust path to your FormData model
 import dbConnect from '../../../dbConnect'; // Adjust path to dbConnect function
 
 export async function PATCH(req, { params }) {

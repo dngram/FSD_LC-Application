@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { FormData } from '../../../models/FormData'; // Import your FormData model
+import FormData from '../../../models/FormData'; // Import your FormData model
 import dbConnect from '../dbConnect'; // Import the dbConnect function
 
 export async function GET() {
