@@ -5,9 +5,23 @@ import connectMongo from '@/lib/mongodb';
 export async function POST(req) {
   try {
     await connectMongo();
-    const { email, password, type } = await req.json();
+    const { email, password } = await req.json();
 
-    // Find the user by email
+    const emailRoleMapping = {
+      'hos@mitwpu.edu.in': 'HoS',
+      'librarian@mitwpu.edu.in': 'Librarian',
+      'accounts@mitwpu.edu.in': 'Accounts',
+      'gymkhana@mitwpu.edu.in': 'Gymkhana',
+      'programoffice@mitwpu.edu.in': 'ProgramOffice',
+      'dean@mitwpu.edu.in': 'Dean'
+    };
+
+    let expectedRole = emailRoleMapping[email.toLowerCase()];
+    
+    if (!expectedRole) {
+      expectedRole = 'student';
+    }
+
     const user = await User.findOne({ email });
     if (!user) {
       return new Response(
@@ -16,15 +30,13 @@ export async function POST(req) {
       );
     }
 
-    // Check if the account type matches
-    if (user.type !== type) {
+    if (user.type !== expectedRole) {
       return new Response(
-        JSON.stringify({ error: `You are not authorized as a ${type}` }),
+        JSON.stringify({ error: `You are not authorized as a ${expectedRole}` }),
         { status: 403 }
       );
     }
 
-    // Compare the passwords
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
       return new Response(
@@ -33,7 +45,6 @@ export async function POST(req) {
       );
     }
 
-    // If everything is correct
     console.log("User logged in:", user);
     return new Response(JSON.stringify({ message: 'Login successful' }), { status: 200 });
   } catch (error) {

@@ -1,74 +1,197 @@
-/* app/global.css */
-
-/* Reset some default styles */
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
 body {
-  font-family: 'Arial', sans-serif; /* Primary font */
-  background-color: #f0f4f8; /* Light background color */
-  color: #333; /* Text color */
-  line-height: 1.6; /* Improved readability */
-  padding: 20px; /* Add padding around the body */
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background-image: url('/bg2.jpg');
+  background-size: cover;
+  background-repeat: no-repeat;
+  color: white;
 }
 
-/* Heading styles */
-h1 {
-  font-size: 2.5rem; /* Larger font size for main headings */
-  color: #007bff; /* Primary color for headings */
-  margin-bottom: 20px; /* Space below the heading */
+h1, h2 {
+  text-align: center;
 }
 
-h2 {
-  font-size: 2rem; /* Slightly smaller than h1 */
-  color: #555; /* Darker gray for subheadings */
-  margin-bottom: 15px; /* Space below the subheading */
-}
-
-/* Link styles */
-a {
-  text-decoration: none; /* Remove underline from links */
-  color: #007bff; /* Link color */
-}
-
-a:hover {
-  color: #0056b3; /* Darker color on hover */
-}
-
-/* Button styles */
 button {
-  background-color: #007bff; /* Button background color */
-  color: white; /* Button text color */
-  border: none; /* Remove border */
-  border-radius: 5px; /* Rounded corners */
-  padding: 10px 20px; /* Padding for buttons */
-  cursor: pointer; /* Pointer cursor for buttons */
-  font-size: 1rem; /* Button text size */
-  transition: background-color 0.3s ease; /* Smooth background transition */
+  font-size: 1rem;
+  padding: 10px 20px;
+  margin: 10px;
+  background-color: #fff;
+  color: #0a3d62;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+.login-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 20px;
+}
+.logo {
+  width: 350px;
+  margin-bottom: 20px;
 }
 
+.login-title {
+  font-size: 24px;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  width: 100%;
+  max-width: 300px;
+}
+
+.login-input {
+  padding: 10px;
+  border: 2px solid #ffffff;
+  border-radius: 5px;
+  background-color: transparent;
+  color: #ffffff;
+  font-size: 16px;
+}
+
+.login-input::placeholder {
+  color: #b0c4de;
+}
+
+.login-button,
+.signup-button {
+  padding: 10px;
+  font-size: 16px;
+  font-weight: bold;
+  border-radius: 5px;
+  cursor: pointer;
+  background-color: #ffffff;
+  color: #0a47a2;
+  border: none;
+}
+
+/* .signup-button {
+  background-color: transparent;
+  color: #ffffff;
+  border: 2px solid #ffffff;
+} */
+.signup-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 20px;
+}
+
+
+
+.signup-title {
+  font-size: 24px;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.signup-form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  width: 100%;
+  max-width: 300px;
+}
+
+.signup-input {
+  padding: 10px;
+  border: 2px solid #ffffff;
+  border-radius: 5px;
+  background-color: transparent;
+  color: #ffffff;
+  font-size: 16px;
+}
+
+.signup-input::placeholder {
+  color: #b0c4de;
+}
+/* 
+.signup-button {
+  padding: 10px;
+  font-size: 16px;
+  font-weight: bold;
+  border-radius: 5px;
+  cursor: pointer;
+  background-color: #ffffff;
+  color: #0a47a2;
+  border: none;
+}
+
+.signup-button {
+  background-color: #ffffff;
+  color: #0a47a2;
+  border: 2px solid #ffffff;
+} */
 button:hover {
-  background-color: #0056b3; /* Darker button color on hover */
+  transform: scale(1.05);
+  box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.2);
 }
 
-/* Responsive adjustments */
-@media (max-width: 768px) {
-  body {
-      padding: 10px; /* Reduce padding on smaller screens */
-  }
+button:active {
+  transform: scale(0.95);
+}
+.dashboard-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 20px;
+}
 
-  h1 {
-      font-size: 2rem; /* Smaller heading for mobile */
-  }
+.dashboard-logo {
+  width: 400px;
+  margin-bottom: 50px;
+}
 
-  h2 {
-      font-size: 1.5rem; /* Smaller subheading for mobile */
-  }
+.dashboard-title {
+  font-size: 24px;
+  margin-bottom: 40px;
+  text-align: center;
+}
+.button-container {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  width: 100%;
+  max-width: 300px;
+}
 
-  button {
-      padding: 8px 16px; /* Smaller button padding for mobile */
+.dashboard-button {
+  padding: 10px;
+  font-size: 16px;
+  font-weight: bold;
+  border-radius: 5px;
+  cursor: pointer;
+  background-color: #ffffff;
+  color: #0a47a2;
+  border: none;
+  width: 100%;
+  text-align: center;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
   }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fade-in {
+  animation: fadeIn 1.5s ease-out;
 }

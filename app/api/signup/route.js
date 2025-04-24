@@ -5,17 +5,23 @@ import connectMongo from '@/lib/mongodb';
 export async function POST(req) {
   try {
     await connectMongo();
-    const { email, password, type } = await req.json();
+    const { email, password } = await req.json();
 
-    // Validate the type field (it should be either "student" or "faculty")
-    if (!['student', 'faculty'].includes(type)) {
-      return new Response(
-        JSON.stringify({ error: 'Invalid user type' }),
-        { status: 400 }
-      );
+    const emailRoleMapping = {
+      'hos@mitwpu.edu.in': 'HoS',
+      'librarian@mitwpu.edu.in': 'Librarian',
+      'accounts@mitwpu.edu.in': 'Accounts',
+      'gymkhana@mitwpu.edu.in': 'Gymkhana',
+      'programoffice@mitwpu.edu.in': 'ProgramOffice',
+      'dean@mitwpu.edu.in': 'Dean'
+    };
+
+    let role = emailRoleMapping[email.toLowerCase()];
+    
+    if (!role) {
+      role = 'student';
     }
 
-    // Check if the user already exists
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return new Response(
@@ -24,15 +30,13 @@ export async function POST(req) {
       );
     }
 
-    // Hash the password
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    // Create a new user with the dynamic type (student or faculty)
     const newUser = new User({
       email,
       password: hashedPassword,
-      type, // Use the passed type field from the frontend
+      type: role 
     });
 
     const savedUser = await newUser.save();
